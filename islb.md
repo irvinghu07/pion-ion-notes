@@ -31,7 +31,9 @@
 
    - An **EventChannel** is a broadcast queue of **events**. **Events** may be any type that implements Send + Sync + 'static . Typically, **EventChannel** s are inserted as resources in the World .
 
-7. **ISLB init:** (The Initializtion of ISLB depends on Redis, Nats and Etcd)
+7. **ISLB init:** (The Initializtion of ISLB depends on Redis, Nats and Etcd); ./etcd.md)
+
+8. 
 
    - ```go
      func Init(dcID, nodeID, rpcID, eventID string, redisCfg db.Config, etcd []string, natsURL string) {
@@ -45,41 +47,13 @@
      	WatchAllStreams()		
      ```
 
-     
+   - Checking the Initialization source code for:   [NATS.md](./Nats.md), [Redis.md](./Redis.md) and [etcd.md](./etcd.md)
 
-   - Initialize NatsProtoo and connect: 
-
-     ```go
-     var np NatsProtoo
-     opts := []nats.Option{nats.Name("NATS Protoo")}
-     opts = setupConnOptions(opts)
-     // Connect to NATS
-     nc, err := nats.Connect(server, opts...)
-     np.Emitter = *emission.NewEmitter()
-     np.mutex = new(sync.Mutex)
-     np.requestListener = make(map[string]RequestFunc)
-     np.broadcastListeners = make(map[string][]BroadCastFunc)
-     ```
-
-   - NatsBroadcaster: 使用NatsBroadcaster广播events
+   - 使用一个map：services记录所有的服务
 
      ```go
-     	var bc Broadcaster
-     	bc.Emitter = *emission.NewEmitter()
-     	bc.subj = subj
-     	bc.np = np
-     	bc.np.On("close", func(code int, err string) {
-     		logger.Infof("Transport closed [%d] %s", code, err)
-     		bc.Emit("close", code, err)
-     	})
-     	bc.np.On("error", func(code int, err string) {
-     		logger.Warnf("Transport got error (%d, %s)", code, err)
-     		bc.Emit("error", code, err)
-     	})
-     	return &bc
+     services = make(map[string]discovery.Node)
      ```
-
-   - 使用一个map：sercices记录所有的服务
 
    - ISLB: handleRequest
 
@@ -186,9 +160,9 @@
 
        - watchStream: Emit an Go routine to Watch for "del" or "expire" Redis OP and remove Stream.
 
-8. Initialize **discovery.ServiceWatcher()**
+9. Initialize **discovery.ServiceWatcher()**
 
-9. WatchServiceNode:
+10. WatchServiceNode:
 
    - Get all nodes from ServiceWatcher.ServiceRegistry
    - Get from serviceWatcher.NodesMap
